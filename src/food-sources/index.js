@@ -51,7 +51,7 @@ export default class FoodSources extends GLProgram {
 
 	loadTexture() {
 		const image = new Image();
-		image.src = '/icons/grass.png';
+		image.src = './icons/grass.png';
 		image.onload = function () {
 			this.bindTexture(image);
 		}.bind(this);

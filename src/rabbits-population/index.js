@@ -91,7 +91,7 @@ export default class RabbitPopulation extends GLProgram {
 
 	loadTexture() {
 		const image = new Image();
-		image.src = '/icons/rabbit.png';
+		image.src = './icons/rabbit.png';
 		image.onload = function () {
 			this.bindTexture(image);
 		}.bind(this);
