@@ -1,0 +1,26 @@
+.rabbit-stats {
+	position: fixed;
+	right: 10px;
+	top: 10px;
+	background: rgba(34, 34, 34, 0.8);
+	padding: 5px 10px;
+	color: #fff;
+	border-radius: 3px;
+}
+
+.rabbit-stats--hidden {
+	display: none;
+}
+
+.rabbit-name {
+	text-align: center;
+}
+
+.rabbit-stat {
+	display: flex;
+	justify-content: space-between;
+}
+
+.rabbit-stat__value {
+	margin-left: 5px;
+}
