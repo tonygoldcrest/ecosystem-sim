@@ -90,10 +90,11 @@ class Game {
 		this.stats.begin();
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
-		const currentTime = Math.max(
-			0.3,
-			Math.min(1, Math.sin((Date.now() - this.startTime) / 10000) + 0.7)
-		);
+		// const currentTime = Math.max(
+			// 0.3,
+			// Math.min(1, Math.sin((Date.now() - this.startTime) / 10000) + 0.7)
+		// );
+		const currentTime = 1;
 		this.environment.updateTime(currentTime);
 		this.rabbitsPopulation.updateTime(currentTime);
 		this.foodSources.updateTime(currentTime);
