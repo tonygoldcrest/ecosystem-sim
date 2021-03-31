@@ -142,12 +142,23 @@ export default class Environment extends GLProgram {
 
 		let closestWater;
 		let currentMin = 1000;
-		for (let i = mapX - radius; i <= mapX + radius; i++) {
-			for (let j = mapY - radius; j <= mapY + radius; j++) {
-				const index = this.columnsNumber * j + i;
+		const minY = mapY - radius < 0 ? 0 : mapY - radius;
+		const maxY =
+			mapY + radius >= this.rowsNumber - 1
+				? this.rowsNumber - 1
+				: mapY + radius;
+		const minX = mapX - radius < 0 ? 0 : mapX - radius;
+		const maxX =
+			mapX + radius >= this.columnsNumber - 1
+				? this.columnsNumber - 1
+				: mapX + radius;
+
+		for (let i = minY; i <= maxY; i++) {
+			for (let j = minX; j <= maxX; j++) {
+				const index = this.columnsNumber * i + j;
 
 				if (this.tiles[index] && this.tiles[index].type === 'water') {
-					const distance = Math.sqrt((i - mapX) ** 2 + (j - mapY) ** 2);
+					const distance = Math.sqrt((j - mapX) ** 2 + (i - mapY) ** 2);
 
 					if (distance < currentMin) {
 						currentMin = distance;

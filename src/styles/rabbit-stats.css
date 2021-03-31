@@ -24,3 +24,43 @@
 .rabbit-stat__value {
 	margin-left: 5px;
 }
+
+.population-size {
+	position: fixed;
+	left: 50%;
+	top: 10px;
+	transform: translateX(-50%);
+	background: rgba(34, 34, 34, 0.8);
+	color: #fff;
+	display: flex;
+	padding: 5px 10px;
+	border-radius: 3px;
+}
+
+.population-size__value {
+	margin-left: 5px;
+}
+
+.obituary {
+	position: fixed;
+	background: rgba(34, 34, 34, 0.8);
+	color: #fff;
+	padding: 5px 10px;
+	border-radius: 3px;
+	bottom: 10px;
+	left: 10px;
+}
+
+.obituary-header {
+	text-align: center;
+}
+
+.obituary-entry {
+	display: flex;
+	margin-top: 3px;
+	justify-content: space-between;
+}
+
+.obituary__value {
+	margin-left: 5px;
+}

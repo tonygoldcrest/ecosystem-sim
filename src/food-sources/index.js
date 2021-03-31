@@ -2,13 +2,14 @@ import GLProgram from '../gl-program/index.js';
 import Food from './food.js';
 
 export default class FoodSources extends GLProgram {
-	constructor(gl, uMatrix, environment) {
+	constructor(gl, uMatrix, environment, global) {
 		super(gl);
 
 		this.uMatrix = uMatrix;
-		this.amount = 100;
+		this.amount = 250;
 		this.foodSources = new Array(this.amount);
 		this.environment = environment;
+		this.global = global;
 
 		this.generateFood();
 		this.loading = Promise.all([this.setupProgram()]);
@@ -61,7 +62,7 @@ export default class FoodSources extends GLProgram {
 		this.gl.useProgram(this.program);
 		const texture = this.gl.createTexture();
 
-		this.gl.activeTexture(this.gl.TEXTURE0 + 1);
+		this.gl.activeTexture(this.gl.TEXTURE0 + this.global.nextTextureRegistry);
 		this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
 
 		this.gl.texParameteri(
@@ -99,7 +100,9 @@ export default class FoodSources extends GLProgram {
 		);
 
 		const imageLocation = this.gl.getUniformLocation(this.program, 'uTexture');
-		this.gl.uniform1i(imageLocation, 1);
+		this.gl.uniform1i(imageLocation, this.global.nextTextureRegistry);
+
+		this.global.nextTextureRegistry += 1;
 	}
 
 	setupUniforms() {

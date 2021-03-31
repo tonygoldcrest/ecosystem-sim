@@ -1,7 +1,8 @@
 {
   "extends": ["airbnb-base"],
-  "plugins": ["prettier"],
+  "plugins": ["prettier", "jest"],
   "env": {
+    "jest/globals": true,
     "browser": true,
     "node": true,
     "es6": true,
@@ -34,7 +35,9 @@
     "no-mixed-spaces-and-tabs": "off",
     "func-names": "off",
     "operator-linebreak": "off",
+    "no-new": "off",
     "import/prefer-default-export": "off",
+    "prefer-destructuring": "off",
     "prettier/prettier": [
       "error",
       { "singleQuote": true, "tabWidth": 2, "semi": true, "trailingComma": "es5", "printWidth": 80, "useTabs": true }

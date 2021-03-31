@@ -68,3 +68,11 @@ export function smoothstep(min, max, value) {
 
 	return x * x * (3 - 2 * x);
 }
+
+export function scaleByResolution(gl, value) {
+	const DEFAULT_RESOLUTION = 1536 * 754;
+
+	const currentResolution = gl.canvas.clientWidth * gl.canvas.clientHeight;
+
+	return (value * currentResolution) / DEFAULT_RESOLUTION;
+}

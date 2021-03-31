@@ -2,10 +2,24 @@ html, body {
 	height: 100%;
 	width: 100%;
 	margin: 0;
+	display: flex;
+    overflow: hidden;
+	justify-content: center;
+	align-items: center;
+	background: #0184A2;
 }
 
 #canvas {
-	height: 100%;
-	width: 100%;
+	width: 1536px;
+	height: 754px;
 }
 
+.underlay {
+    border: 25px solid #E7BF81;
+    border-radius: 20px;
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+	width: 1536px;
+	height: 754px;
+}

@@ -1,7 +1,11 @@
 import Environment from './environment/index.js';
 import FoodSources from './food-sources/index.js';
 import { resizeCanvasToDisplaySize, hexToRgb } from './helpers.js';
-import { updateStats } from './rabbit-stats.js';
+import {
+	updateObituary,
+	updatePopulationSize,
+	updateStats,
+} from './rabbit-stats.js';
 import RabbitPopulation from './rabbits-population/index.js';
 
 class Game {
@@ -10,6 +14,15 @@ class Game {
 
 		/** @type {WebGL2RenderingContext} */
 		this.gl = this.canvas.getContext('webgl2');
+
+		this.dayNightCycle = false;
+
+		this.global = {
+			nextTextureRegistry: 0,
+			gl: this.gl,
+		};
+
+		window.global = this.global;
 	}
 
 	async setupGl() {
@@ -36,20 +49,22 @@ class Game {
 		this.foodSources = new FoodSources(
 			this.gl,
 			this.mProjection,
-			this.environment
+			this.environment,
+			this.global
 		);
 		this.rabbitsPopulation = new RabbitPopulation(
 			this.gl,
 			this.mProjection,
 			this.environment,
-			this.foodSources
+			this.foodSources,
+			this.global
 		);
 
 		this.stats = new Stats();
 		this.stats.showPanel(0);
 		document.body.appendChild(this.stats.dom);
 
-		const backgroundColorRgb = hexToRgb('#000000');
+		const backgroundColorRgb = hexToRgb('#E7BF81');
 		this.gl.clearColor(
 			backgroundColorRgb.r,
 			backgroundColorRgb.g,
@@ -61,10 +76,10 @@ class Game {
 		await this.foodSources.loading;
 		await this.rabbitsPopulation.loading;
 
-		document.addEventListener('mousedown', (event) => {
+		this.canvas.addEventListener('mousedown', (event) => {
 			const rabbit = this.rabbitsPopulation.getRabbitAt(
-				event.clientX,
-				event.clientY
+				event.offsetX,
+				event.offsetY
 			);
 
 			if (rabbit) {
@@ -90,11 +105,13 @@ class Game {
 		this.stats.begin();
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
-		// const currentTime = Math.max(
-			// 0.3,
-			// Math.min(1, Math.sin((Date.now() - this.startTime) / 10000) + 0.7)
-		// );
-		const currentTime = 1;
+		let currentTime = 1;
+		if (this.dayNightCycle) {
+			currentTime = Math.max(
+				0.3,
+				Math.min(1, Math.sin((Date.now() - this.startTime) / 10000) + 0.7)
+			);
+		}
 		this.environment.updateTime(currentTime);
 		this.rabbitsPopulation.updateTime(currentTime);
 		this.foodSources.updateTime(currentTime);
@@ -104,6 +121,8 @@ class Game {
 		this.foodSources.draw();
 
 		updateStats(this.highlightedRabbit);
+		updatePopulationSize(this.rabbitsPopulation.rabbits.length);
+		updateObituary(this.rabbitsPopulation.obituary);
 
 		this.stats.end();
 		requestAnimationFrame(this.draw.bind(this));

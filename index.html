@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <title>New WebGL project</title>
 
-  <link rel="stylesheet" href="./src/styles/index.css">
+  <link rel="stylesheet" href="./src/styles/index.css" as="style">
   <link rel="stylesheet" href="./src/styles/rabbit-stats.css">
   <script src="./libs/stats.min.js"></script>
   <script src="./libs/gl-matrix-min.js"></script>
   <script src="./libs/noise.js"></script>
 </head>
 <body>
+  <div class="underlay"></div>
   <canvas id="canvas"></canvas>
 
   <script type="module" src="./src/index.js"></script>
