@@ -280,7 +280,11 @@ export default class RabbitPopulation extends GLProgram {
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
 		this.gl.bindVertexArray(this.vao);
 
-		this.gl.bufferData(this.gl.ARRAY_BUFFER, this.rawData, this.gl.STATIC_DRAW);
+		this.gl.bufferData(
+			this.gl.ARRAY_BUFFER,
+			this.rawData,
+			this.gl.DYNAMIC_DRAW
+		);
 		this.gl.drawArrays(this.gl.POINTS, 0, aliveRabbits.length);
 
 		const deadRabbits = this.rabbits.filter((rabbit) => !rabbit.state.alive);

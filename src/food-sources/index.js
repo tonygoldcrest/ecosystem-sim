@@ -159,7 +159,11 @@ export default class FoodSources extends GLProgram {
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
 		this.gl.bindVertexArray(this.vao);
 
-		this.gl.bufferData(this.gl.ARRAY_BUFFER, this.rawData, this.gl.STATIC_DRAW);
+		this.gl.bufferData(
+			this.gl.ARRAY_BUFFER,
+			this.rawData,
+			this.gl.DYNAMIC_DRAW
+		);
 		this.gl.drawArrays(this.gl.POINTS, 0, fullSources.length);
 	}
 }
