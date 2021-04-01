@@ -113,7 +113,7 @@ export default class Rabbit {
 			return;
 		}
 
-		if (Math.random() < 0.000005) {
+		if (Math.random() < scaleByDeltaTime(0.000005)) {
 			this.die(DEATH_REASONS.ILLNESS);
 		}
 

@@ -1,4 +1,5 @@
 import GLProgram from '../gl-program/index.js';
+import { scaleByDeltaTime } from '../helpers.js';
 import Food from './food.js';
 
 export default class FoodSources extends GLProgram {
@@ -146,7 +147,7 @@ export default class FoodSources extends GLProgram {
 
 		const emptySources = this.foodSources.filter((source) => source.empty);
 		emptySources.forEach((source) => {
-			if (Math.random() < 0.0001) {
+			if (Math.random() < scaleByDeltaTime(0.0001)) {
 				const randomTile = this.environment.getRandomGrassTile();
 				source.x = randomTile.x;
 				source.y = randomTile.y;
