@@ -20,6 +20,7 @@ class Game {
 		this.global = {
 			nextTextureRegistry: 0,
 			gl: this.gl,
+			deltaTime: 0,
 		};
 
 		window.global = this.global;
@@ -98,10 +99,15 @@ class Game {
 
 		this.startTime = Date.now();
 
-		this.draw();
+		requestAnimationFrame(this.draw.bind(this));
 	}
 
-	draw() {
+	draw(now) {
+		if (!this.frameEndTime) {
+			this.frameEndTime = now;
+		}
+
+		this.global.deltaTime = (now - this.frameEndTime) / 1000;
 		this.stats.begin();
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
@@ -126,6 +132,7 @@ class Game {
 
 		this.stats.end();
 		requestAnimationFrame(this.draw.bind(this));
+		this.frameEndTime = now;
 	}
 }
 

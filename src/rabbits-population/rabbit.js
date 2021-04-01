@@ -1,4 +1,4 @@
-import { scaleByResolution } from '../helpers.js';
+import { scaleByDeltaTime, scaleByResolution } from '../helpers.js';
 import names from '../names.js';
 import { getInheritableProp } from './helpers.js';
 
@@ -174,11 +174,7 @@ export default class Rabbit {
 		);
 		const movement = glMatrix.vec2.fromValues(...this.state.velocity);
 
-		glMatrix.vec2.scale(
-			movement,
-			movement,
-			scaleByResolution(global.gl, coeff)
-		);
+		glMatrix.vec2.scale(movement, movement, scaleByDeltaTime(coeff));
 		glMatrix.vec2.add(this.state.position, this.state.position, movement);
 		this.state.projectedSize = this.state.size + 5 * coeff;
 	}
@@ -248,20 +244,20 @@ export default class Rabbit {
 	}
 
 	updateStats() {
-		this.state.stats.age += 0.002;
-		this.state.stats.food -= 0.012;
+		this.state.stats.age += scaleByDeltaTime(0.002);
+		this.state.stats.food -= scaleByDeltaTime(0.012);
 		if (this.config.sex === SEX.MALE) {
-			this.state.stats.mate += 0.01;
+			this.state.stats.mate += scaleByDeltaTime(0.01);
 		}
 
 		if (this.state.pregnant) {
-			this.state.stats.pregnancy += 0.01;
+			this.state.stats.pregnancy += scaleByDeltaTime(0.01);
 		}
 
 		if (!this.state.isDrinking) {
-			this.state.stats.water -= 0.012;
+			this.state.stats.water -= scaleByDeltaTime(0.012);
 		} else {
-			this.state.stats.water += 0.1;
+			this.state.stats.water += scaleByDeltaTime(0.1);
 
 			if (this.state.stats.water > 100) {
 				this.state.isDrinking = false;

@@ -76,3 +76,11 @@ export function scaleByResolution(gl, value) {
 
 	return (value * currentResolution) / DEFAULT_RESOLUTION;
 }
+
+export function scaleByDeltaTime(value) {
+	if (global.deltaTime === 0) {
+		return value;
+	}
+
+	return (value * global.deltaTime) / (1 / 144);
+}
