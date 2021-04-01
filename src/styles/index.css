@@ -3,23 +3,53 @@ html, body {
 	width: 100%;
 	margin: 0;
 	display: flex;
-    overflow: hidden;
+	overflow: hidden;
 	justify-content: center;
 	align-items: center;
 	background: #0184A2;
+	font-family: 'Roboto', 'Arial';
 }
 
 #canvas {
 	width: 1536px;
 	height: 754px;
+	z-index: 1;
 }
 
-.underlay {
-    border: 25px solid #E7BF81;
-    border-radius: 20px;
-    position: absolute;
-    z-index: 0;
-    pointer-events: none;
+#underlay {
+	border: 25px solid #E7BF81;
+	border-radius: 20px;
+	display: none;
+	position: absolute;
+	z-index: 0;
+	pointer-events: none;
 	width: 1536px;
 	height: 754px;
+	align-items: center;
+	justify-content: center;
+	color: #ecf0f1;
+	font-size: 70px;
 }
+
+#play-button {
+	position: absolute;
+	border: 10px solid #ecf0f1;
+	background: transparent;
+	color: #ecf0f1;
+	font-size: 50px;
+	font-weight: bold;
+	border-radius: 60px;
+	outline: none;
+	padding: 20px 60px;
+	width: 30%;
+	cursor: pointer;
+	text-transform: uppercase;
+	transition: all .2s ease-in-out;
+	z-index: 2;
+}
+
+#play-button:hover {
+	background: #ecf0f1;
+	color: #0184A2;
+}
+

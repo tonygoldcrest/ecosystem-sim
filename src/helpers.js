@@ -62,6 +62,7 @@ export function hexToRgb(hex) {
 		  }
 		: null;
 }
+window.hexToRgb = hexToRgb;
 
 export function smoothstep(min, max, value) {
 	const x = Math.max(0, Math.min(1, (value - min) / (max - min)));

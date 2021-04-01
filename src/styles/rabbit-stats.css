@@ -1,10 +1,12 @@
 .rabbit-stats {
 	position: fixed;
+	z-index: 2;
 	right: 10px;
 	top: 10px;
-	background: rgba(34, 34, 34, 0.8);
+	background: rgba(44, 62, 80, 0.9);
 	padding: 5px 10px;
-	color: #fff;
+	font-size: 14px;
+	color: #ecf0f1;
 	border-radius: 3px;
 }
 
@@ -14,11 +16,19 @@
 
 .rabbit-name {
 	text-align: center;
+	font-size: 15px;
+	font-weight: bold;
 }
 
 .rabbit-stat {
 	display: flex;
 	justify-content: space-between;
+	margin-top: 3px;
+}
+
+.rabbit-stat:not(:last-child) {
+	padding-bottom: 3px;
+	border-bottom: 1px solid  #ecf0f1;
 }
 
 .rabbit-stat__value {
@@ -29,12 +39,17 @@
 	position: fixed;
 	left: 50%;
 	top: 10px;
+	z-index: 2;
 	transform: translateX(-50%);
-	background: rgba(34, 34, 34, 0.8);
-	color: #fff;
+	background: rgba(44, 62, 80, 0.9);
+	color: #ecf0f1;
 	display: flex;
 	padding: 5px 10px;
 	border-radius: 3px;
+}
+
+.population-size:empty {
+	display: none;
 }
 
 .population-size__value {
@@ -42,13 +57,19 @@
 }
 
 .obituary {
+	z-index: 2;
 	position: fixed;
-	background: rgba(34, 34, 34, 0.8);
-	color: #fff;
+	background: rgba(44, 62, 80, 0.9);
+	color: #ecf0f1;
+	font-size: 13px;
 	padding: 5px 10px;
 	border-radius: 3px;
 	bottom: 10px;
 	left: 10px;
+}
+
+.obituary:empty {
+	display: none;
 }
 
 .obituary-header {
@@ -59,6 +80,11 @@
 	display: flex;
 	margin-top: 3px;
 	justify-content: space-between;
+}
+
+.obituary-entry:not(:last-child) {
+	padding-bottom: 3px;
+	border-bottom: 1px solid #ecf0f1;
 }
 
 .obituary__value {

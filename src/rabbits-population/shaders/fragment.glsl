@@ -35,7 +35,7 @@ void main() {
 	}
 
 	if (aHighlighted == 1.0) {
-		textureColor = textureColor * vec4(0.5, 0.5, 0.5, 1);
+		textureColor = textureColor * vec4(0.1725, 0.2431, 0.3137, 1);
 	}
 
 	outColor = textureColor * vec4(uTime, uTime, uTime, 1);

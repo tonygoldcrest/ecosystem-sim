@@ -108,6 +108,11 @@ class Game {
 		}
 
 		this.global.deltaTime = (now - this.frameEndTime) / 1000;
+
+		if (this.global.deltaTime > 0.1) {
+			this.global.deltaTime = 0;
+		}
+
 		this.stats.begin();
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
@@ -137,4 +142,14 @@ class Game {
 }
 
 const game = new Game();
-game.start();
+
+const playButton = document.getElementById('play-button');
+const underlay = document.getElementById('underlay');
+
+playButton.addEventListener('click', () => {
+	playButton.style.display = 'none';
+	underlay.style.display = 'flex';
+	setTimeout(() => {
+		game.start();
+	}, 30);
+});

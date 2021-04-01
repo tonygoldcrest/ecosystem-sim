@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>New WebGL project</title>
 
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="./src/styles/index.css" as="style">
   <link rel="stylesheet" href="./src/styles/rabbit-stats.css">
   <script src="./libs/stats.min.js"></script>
@@ -11,8 +14,12 @@
   <script src="./libs/noise.js"></script>
 </head>
 <body>
-  <div class="underlay"></div>
+  <div id="underlay">Loading...</div>
   <canvas id="canvas"></canvas>
+
+  <button id="play-button">
+    Start
+  </div>
 
   <script type="module" src="./src/index.js"></script>
 </body>

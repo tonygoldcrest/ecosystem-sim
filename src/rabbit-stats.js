@@ -53,13 +53,13 @@ export function updateStats(rabbit) {
 			}
 			<div class="rabbit-stat">
 				<div class="rabbit-stat__name">Water:</div>
-				<div class="rabbit-stat__value">${Math.floor(rabbit.state.stats.water)}</div>
+				<div class="rabbit-stat__value">${Math.floor(rabbit.state.stats.water)}%</div>
 			</div>
 			<div class="rabbit-stat">
 				<div class="rabbit-stat__name">Water search threshold:</div>
 				<div class="rabbit-stat__value">${Math.floor(
 					rabbit.state.waterSearchThreshold
-				)}</div>
+				)}%</div>
 			</div>
 			<div class="rabbit-stat">
 				<div class="rabbit-stat__name">Going for water:</div>
@@ -69,13 +69,13 @@ export function updateStats(rabbit) {
 			</div>
 			<div class="rabbit-stat">
 				<div class="rabbit-stat__name">Food:</div>
-				<div class="rabbit-stat__value">${Math.floor(rabbit.state.stats.food)}</div>
+				<div class="rabbit-stat__value">${Math.floor(rabbit.state.stats.food)}%</div>
 			</div>
 			<div class="rabbit-stat">
 				<div class="rabbit-stat__name">Food search threshold:</div>
 				<div class="rabbit-stat__value">${Math.floor(
 					rabbit.state.foodSearchThreshold
-				)}</div>
+				)}%</div>
 			</div>
 			<div class="rabbit-stat">
 				<div class="rabbit-stat__name">Going for food:</div>
@@ -87,7 +87,7 @@ export function updateStats(rabbit) {
 				rabbit.config.sex === SEX.MALE
 					? `<div class="rabbit-stat">
 						<div class="rabbit-stat__name">Mating desire:</div>
-						<div class="rabbit-stat__value">${Math.floor(rabbit.state.stats.mate)}</div>
+						<div class="rabbit-stat__value">${Math.floor(rabbit.state.stats.mate)}%</div>
 					</div>
 					<div class="rabbit-stat">
 						<div class="rabbit-stat__name">Impregnated females:</div>
@@ -106,7 +106,7 @@ export function updateStats(rabbit) {
 						<div class="rabbit-stat__name">Pregnancy progress:</div>
 						<div class="rabbit-stat__value">${Math.floor(
 							rabbit.state.stats.pregnancy
-						)}</div>
+						)}%</div>
 					</div>
 					<div class="rabbit-stat">
 						<div class="rabbit-stat__name">Childbirths:</div>
@@ -131,7 +131,7 @@ export function updatePopulationSize(size) {
 const obituaryKeys = {
 	[DEATH_REASONS.THIRST]: 'Thirst',
 	[DEATH_REASONS.STARVATION]: 'Starvation',
-	[DEATH_REASONS.DRAWN]: 'Drawn',
+	[DEATH_REASONS.DRAWN]: 'Drowning',
 	[DEATH_REASONS.AGE]: 'Age',
 	[DEATH_REASONS.OUT_OF_BOUNDS]: 'Out of bounds',
 	[DEATH_REASONS.ILLNESS]: 'Illness',
