@@ -32,6 +32,7 @@ class Game {
 		this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
 		this.gl.enable(this.gl.BLEND);
+		this.gl.disable(this.gl.DEPTH_TEST);
 		this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
 		this.mProjection = glMatrix.mat3.create();
@@ -115,17 +116,6 @@ class Game {
 
 		this.stats.begin();
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-
-		let currentTime = 1;
-		if (this.dayNightCycle) {
-			currentTime = Math.max(
-				0.3,
-				Math.min(1, Math.sin((Date.now() - this.startTime) / 10000) + 0.7)
-			);
-		}
-		this.environment.updateTime(currentTime);
-		this.rabbitsPopulation.updateTime(currentTime);
-		this.foodSources.updateTime(currentTime);
 
 		this.environment.draw();
 		this.rabbitsPopulation.draw();

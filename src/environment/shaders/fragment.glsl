@@ -4,10 +4,14 @@ precision highp float;
 
 out vec4 outColor;
 
-in vec3 aColor;
+uniform vec3 uColor;
 
 uniform float uTime;
+uniform sampler2D uTexture;
+uniform vec2 uResolution;
+in vec2 aInterpPosition;
 
 void main() {
-	outColor = vec4(aColor.xyz, 1) * vec4(uTime, uTime, uTime, 1);
+	vec2 uv = aInterpPosition / uResolution.xy;
+	outColor = texture(uTexture, uv);
 }

@@ -265,7 +265,6 @@ export default class RabbitPopulation extends GLProgram {
 
 		for (let i = 0; i < aliveRabbits.length; i++) {
 			aliveRabbits[i].live();
-			const rabbit = aliveRabbits[i].toArray();
 			[
 				this.rawData[6 * i],
 				this.rawData[6 * i + 1],
@@ -273,7 +272,7 @@ export default class RabbitPopulation extends GLProgram {
 				this.rawData[6 * i + 3],
 				this.rawData[6 * i + 4],
 				this.rawData[6 * i + 5],
-			] = rabbit;
+			] = aliveRabbits[i].toArray();
 		}
 
 		this.gl.useProgram(this.program);

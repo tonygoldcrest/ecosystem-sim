@@ -38,5 +38,5 @@ void main() {
 		textureColor = textureColor * vec4(0.1725, 0.2431, 0.3137, 1);
 	}
 
-	outColor = textureColor * vec4(uTime, uTime, uTime, 1);
+	outColor = textureColor;
 }

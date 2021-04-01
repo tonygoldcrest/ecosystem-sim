@@ -6,6 +6,7 @@ export default class Tile {
 		this.x = x;
 		this.y = y;
 		this.type = type;
+		this.colorHex = colors[type];
 		this.color = hexToRgb(colors[type]);
 	}
 
