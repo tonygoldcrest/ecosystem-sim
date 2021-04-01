@@ -53,3 +53,18 @@ html, body {
 	color: #0184A2;
 }
 
+.icons-attribution {
+	position: fixed;
+	bottom: 5px;
+	right: 5px;
+	font-size: 9px;
+	z-index: 2;
+	color: #ecf0f1;
+	background: rgba(44, 62, 80, 0.9);
+	padding: 2px 5px;
+	border-radius: 3px;
+}
+
+.icons-attribution a {
+	color: #ecf0f1;
+}
