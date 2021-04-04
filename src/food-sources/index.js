@@ -28,7 +28,16 @@ export default class FoodSources extends GLProgram {
 		this.setupAttributes();
 		this.setupUniforms();
 
-		this.loadTexture();
+		this.assignTextureToUniform();
+	}
+
+	async assignTextureToUniform() {
+		const { registry } = await this.loadTexture('./icons/grass.png');
+
+		this.gl.useProgram(this.program);
+		this.gl.bindVertexArray(this.vao);
+		const imageLocation = this.gl.getUniformLocation(this.program, 'uTexture');
+		this.gl.uniform1i(imageLocation, registry);
 	}
 
 	setupAttributes() {
@@ -51,61 +60,6 @@ export default class FoodSources extends GLProgram {
 		this.gl.enableVertexAttribArray(positionAttributeLocation);
 	}
 
-	loadTexture() {
-		const image = new Image();
-		image.src = './icons/grass.png';
-		image.onload = function () {
-			this.bindTexture(image);
-		}.bind(this);
-	}
-
-	bindTexture(image) {
-		this.gl.useProgram(this.program);
-		const texture = this.gl.createTexture();
-
-		this.gl.activeTexture(this.gl.TEXTURE0 + this.global.nextTextureRegistry);
-		this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_WRAP_S,
-			this.gl.CLAMP_TO_EDGE
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_WRAP_T,
-			this.gl.CLAMP_TO_EDGE
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_MIN_FILTER,
-			this.gl.NEAREST
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_MAG_FILTER,
-			this.gl.NEAREST
-		);
-
-		const mipLevel = 0;
-		const internalFormat = this.gl.RGBA;
-		const srcFormat = this.gl.RGBA;
-		const srcType = this.gl.UNSIGNED_BYTE;
-		this.gl.texImage2D(
-			this.gl.TEXTURE_2D,
-			mipLevel,
-			internalFormat,
-			srcFormat,
-			srcType,
-			image
-		);
-
-		const imageLocation = this.gl.getUniformLocation(this.program, 'uTexture');
-		this.gl.uniform1i(imageLocation, this.global.nextTextureRegistry);
-
-		this.global.nextTextureRegistry += 1;
-	}
-
 	setupUniforms() {
 		super.setupUniforms();
 		const matrixLocation = this.gl.getUniformLocation(this.program, 'uMatrix');
@@ -124,7 +78,7 @@ export default class FoodSources extends GLProgram {
 
 	getClosestFoodSource(x, y, distance) {
 		let minDistance = 1000;
-		let currentClosestSource;
+		let currentClosestSource = null;
 		this.foodSources.forEach((source) => {
 			const dst = Math.abs(
 				glMatrix.vec2.distance([x, y], [source.x, source.y])

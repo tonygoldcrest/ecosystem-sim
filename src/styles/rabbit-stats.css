@@ -35,7 +35,7 @@
 	margin-left: 5px;
 }
 
-.population-size {
+.global-stats {
 	position: fixed;
 	left: 50%;
 	top: 10px;
@@ -43,16 +43,24 @@
 	transform: translateX(-50%);
 	background: rgba(44, 62, 80, 0.9);
 	color: #ecf0f1;
-	display: flex;
 	padding: 5px 10px;
 	border-radius: 3px;
 }
 
-.population-size:empty {
+.global-stats:empty {
 	display: none;
 }
 
-.population-size__value {
+.global-stats__entry {
+	display: flex;
+	justify-content: space-between;
+}
+
+.global-stats__entry + .global-stats__entry {
+	margin-top: 3px;
+}
+
+.global-stats__value {
 	margin-left: 5px;
 }
 

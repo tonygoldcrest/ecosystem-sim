@@ -11,6 +11,10 @@ export function getInheritableProp(prop, type, mother) {
 		case 'father':
 			return mother.state.fatherProps[prop];
 		default:
-			throw new Error('unknown prop');
+			throw new Error('unknown type');
 	}
+}
+
+export function mutate(prop) {
+	return prop;
 }

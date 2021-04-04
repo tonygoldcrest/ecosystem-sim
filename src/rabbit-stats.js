@@ -1,13 +1,17 @@
-import { ACTIVITIES, DEATH_REASONS, SEX } from './rabbits-population/rabbit.js';
+import {
+	ACTIVITIES,
+	DEATH_REASONS,
+	SEX,
+} from './rabbits-population/constants.js';
 
 const stats = document.createElement('div');
 stats.classList.add('rabbit-stats');
 stats.classList.add('rabbit-stats--hidden');
 document.body.appendChild(stats);
 
-const populationSize = document.createElement('div');
-populationSize.classList.add('population-size');
-document.body.appendChild(populationSize);
+const globalStats = document.createElement('div');
+globalStats.classList.add('global-stats');
+document.body.appendChild(globalStats);
 
 const obituary = document.createElement('div');
 obituary.classList.add('obituary');
@@ -23,6 +27,12 @@ export function updateStats(rabbit) {
 				<div class="rabbit-stat__name">Sex:</div>
 				<div class="rabbit-stat__value">${
 					rabbit.config.sex === SEX.MALE ? 'male' : 'female'
+				}</div>
+			</div>
+			<div class="rabbit-stat">
+				<div class="rabbit-stat__name">Generation:</div>
+				<div class="rabbit-stat__value">${
+					rabbit.config.inheritableProps.generation
 				}</div>
 			</div>
 			<div class="rabbit-stat">
@@ -121,10 +131,18 @@ export function updateStats(rabbit) {
 	}
 }
 
-export function updatePopulationSize(size) {
-	populationSize.innerHTML = `
-			<div class="population-size__key">Population size:</div>
-			<div class="population-size__value">${size}</div>
+export function updateGlobalStats(populationSize) {
+	globalStats.innerHTML = `
+			<div class="global-stats__entry">
+				<div class="global-stats__key">Simulation time:</div>
+				<div class="global-stats__value">${new Date(global.simulationTime * 1000)
+					.toISOString()
+					.substr(11, 8)}</div>
+			</div>
+			<div class="global-stats__entry">
+				<div class="global-stats__key">Population size:</div>
+				<div class="global-stats__value">${populationSize}</div>
+			</div>
 			`;
 }
 

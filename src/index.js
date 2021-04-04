@@ -3,10 +3,11 @@ import FoodSources from './food-sources/index.js';
 import { resizeCanvasToDisplaySize, hexToRgb } from './helpers.js';
 import {
 	updateObituary,
-	updatePopulationSize,
+	updateGlobalStats,
 	updateStats,
 } from './rabbit-stats.js';
 import RabbitPopulation from './rabbits-population/index.js';
+import initSpeedControl from './speed-control.js';
 
 class Game {
 	constructor() {
@@ -21,6 +22,9 @@ class Game {
 			nextTextureRegistry: 0,
 			gl: this.gl,
 			deltaTime: 0,
+			simulationTime: 0,
+			timeFromStart: 0,
+			speedUpFactor: 1,
 		};
 
 		window.global = this.global;
@@ -100,19 +104,32 @@ class Game {
 
 		this.startTime = Date.now();
 
-		requestAnimationFrame(this.draw.bind(this));
+		// requestAnimationFrame(this.draw.bind(this));
+		//
+		this.limitFps(144);
 	}
 
 	draw(now) {
 		if (!this.frameEndTime) {
 			this.frameEndTime = now;
 		}
+		// if (this.global.timeFromStart > 1000) {
+		// this.global.timeFromStart = 0;
+		// }
 
 		this.global.deltaTime = (now - this.frameEndTime) / 1000;
 
 		if (this.global.deltaTime > 0.1) {
 			this.global.deltaTime = 0;
 		}
+
+		if (this.rabbitsPopulation.rabbits.length) {
+			this.global.simulationTime +=
+				this.global.deltaTime * this.global.speedUpFactor;
+		}
+
+		// this.global.timeFromStart += this.global.deltaTime;
+		this.global.timeFromStart = (Date.now() - this.startTime) / 1000;
 
 		this.stats.begin();
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -122,12 +139,31 @@ class Game {
 		this.foodSources.draw();
 
 		updateStats(this.highlightedRabbit);
-		updatePopulationSize(this.rabbitsPopulation.rabbits.length);
+		updateGlobalStats(this.rabbitsPopulation.rabbits.length);
 		updateObituary(this.rabbitsPopulation.obituary);
 
 		this.stats.end();
-		requestAnimationFrame(this.draw.bind(this));
+		// requestAnimationFrame(this.draw.bind(this));
 		this.frameEndTime = now;
+	}
+
+	limitFps(fps) {
+		this.fpsInterval = 1000 / fps;
+		this.then = Date.now();
+		requestAnimationFrame(this.animateWithLimitedFps.bind(this));
+	}
+
+	animateWithLimitedFps(now) {
+		requestAnimationFrame(this.animateWithLimitedFps.bind(this));
+
+		this.now = Date.now();
+		this.elapsed = this.now - this.then;
+
+		if (this.elapsed > this.fpsInterval) {
+			this.then = this.now - (this.elapsed % this.fpsInterval);
+
+			this.draw(now);
+		}
 	}
 }
 
@@ -140,6 +176,7 @@ playButton.addEventListener('click', () => {
 	playButton.style.display = 'none';
 	underlay.style.display = 'flex';
 	setTimeout(() => {
+		initSpeedControl();
 		game.start();
 	}, 30);
 });

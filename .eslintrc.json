@@ -37,6 +37,9 @@
     "operator-linebreak": "off",
     "no-new": "off",
     "import/prefer-default-export": "off",
+    "no-continue": "off",
+    "class-methods-use-this": "off",
+    "implicit-arrow-linebreak": "off",
     "prefer-destructuring": "off",
     "prettier/prettier": [
       "error",

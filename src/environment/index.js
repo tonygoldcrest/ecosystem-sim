@@ -1,6 +1,7 @@
 import GLProgram from '../gl-program/index.js';
 import { hexToRgb } from '../helpers.js';
 import Tile from './tile.js';
+import Heapify from '../../libs/heapify.mjs';
 
 export default class Environment extends GLProgram {
 	constructor(gl, uMatrix) {
@@ -24,8 +25,17 @@ export default class Environment extends GLProgram {
 		this.generateTiles();
 
 		this.loading.then(() => {
-			this.loadTexture(this.generateImage());
+			this.assignTextureToUniform();
 		});
+	}
+
+	async assignTextureToUniform() {
+		const { registry } = await this.loadTexture(this.generateImage());
+
+		this.gl.useProgram(this.program);
+		this.gl.bindVertexArray(this.vao);
+		const imageLocation = this.gl.getUniformLocation(this.program, 'uTexture');
+		this.gl.uniform1i(imageLocation, registry);
 	}
 
 	async setupProgram() {
@@ -94,8 +104,25 @@ export default class Environment extends GLProgram {
 
 		for (let i = 0; i < this.rowsNumber; i++) {
 			for (let j = 0; j < this.columnsNumber; j++) {
+				// if (
+					// (i - this.rowsNumber / 2) ** 2 + (j - this.columnsNumber / 2) ** 2 >
+					// (this.rowsNumber / 2.2) ** 2
+				// ) {
+					// this.tiles[i * this.columnsNumber + j] = new Tile(
+						// i * this.columnsNumber + j,
+						// this.side / 2 + j * this.side + this.columnOffset,
+						// this.side / 2 + i * this.side + this.rowOffset,
+						// 'water',
+						// false,
+						// Math.random() < 0.01 ? '#ffffff' : '#000000'
+					// );
+					// continue;
+				// }
+
 				const noiseValue = noise.simplex2(j / noiseScale, i / noiseScale);
 				let tileType;
+				let walkable = true;
+
 				if (noiseValue < -0.8) {
 					tileType = 'dirt';
 				} else if (noiseValue < -0.5) {
@@ -106,12 +133,15 @@ export default class Environment extends GLProgram {
 					tileType = 'sand';
 				} else {
 					tileType = 'water';
+					walkable = false;
 				}
 
 				this.tiles[i * this.columnsNumber + j] = new Tile(
+					i * this.columnsNumber + j,
 					this.side / 2 + j * this.side + this.columnOffset,
 					this.side / 2 + i * this.side + this.rowOffset,
-					tileType
+					tileType,
+					walkable
 				);
 			}
 		}
@@ -140,62 +170,6 @@ export default class Environment extends GLProgram {
 		return canvas.toDataURL('image/png');
 	}
 
-	loadTexture(src) {
-		const image = new Image();
-		image.src = src;
-		image.onload = function () {
-			this.bindTexture(image);
-		}.bind(this);
-	}
-
-	bindTexture(image) {
-		const texture = this.gl.createTexture();
-
-		this.gl.activeTexture(this.gl.TEXTURE0 + global.nextTextureRegistry);
-		this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_WRAP_S,
-			this.gl.CLAMP_TO_EDGE
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_WRAP_T,
-			this.gl.CLAMP_TO_EDGE
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_MIN_FILTER,
-			this.gl.NEAREST
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_MAG_FILTER,
-			this.gl.NEAREST
-		);
-
-		const mipLevel = 0;
-		const internalFormat = this.gl.RGBA;
-		const srcFormat = this.gl.RGBA;
-		const srcType = this.gl.UNSIGNED_BYTE;
-		this.gl.texImage2D(
-			this.gl.TEXTURE_2D,
-			mipLevel,
-			internalFormat,
-			srcFormat,
-			srcType,
-			image
-		);
-
-		this.gl.useProgram(this.program);
-		this.gl.bindVertexArray(this.vao);
-		const imageLocation = this.gl.getUniformLocation(this.program, 'uTexture');
-		this.gl.uniform1i(imageLocation, global.nextTextureRegistry);
-
-		global.nextTextureRegistry += 1;
-	}
-
 	getRandomGroundTile() {
 		if (!this.groundTiles) {
 			this.groundTiles = this.tiles.filter((tile) => tile.type !== 'water');
@@ -214,6 +188,28 @@ export default class Environment extends GLProgram {
 		}
 
 		return this.grassTiles[Math.floor(Math.random() * this.grassTiles.length)];
+		// return this.grassTiles[5000];
+	}
+
+	getRandomGrassTileWithinRadius(x, y, radius) {
+		const mapX = Math.floor((x - this.columnOffset) / this.side);
+		const mapY = Math.floor((y - this.rowOffset) / this.side);
+
+		const minY = Math.max(0, mapY - radius);
+		const maxY = Math.min(mapY + radius, this.rowsNumber - 1);
+		const minX = Math.max(0, mapX - radius);
+		const maxX = Math.min(mapX + radius, this.columnsNumber - 1);
+
+		const minIndex = this.columnsNumber * minY + minX;
+		const maxIndex = this.columnsNumber * maxY + maxX;
+
+		const grassTiles = this.tiles
+			.slice(minIndex, maxIndex)
+			.filter((tile) => tile.type === 'grass' || tile.type === 'darkGrass');
+
+		console.log(grassTiles.length, minIndex, maxIndex);
+
+		return grassTiles[Math.floor(Math.random() * grassTiles.length)];
 	}
 
 	isWater(x, y) {
@@ -273,5 +269,117 @@ export default class Environment extends GLProgram {
 			this.columnOffset, this.gl.canvas.clientHeight - this.rowOffset,
 			this.gl.canvas.clientWidth - this.columnOffset, this.gl.canvas.clientHeight - this.rowOffset,
 		];
+	}
+
+	getPathToTile(fromX, fromY, toTile) {
+		const mapFromX = Math.floor((fromX - this.columnOffset) / this.side);
+		const mapFromY = Math.floor((fromY - this.rowOffset) / this.side);
+		const fromTile = this.tiles[this.columnsNumber * mapFromY + mapFromX];
+
+		if (!fromTile || !toTile) {
+			return null;
+		}
+
+		return this.aStar(fromTile, toTile, glMatrix.vec2.distance);
+	}
+
+	getPath(fromX, fromY, toX, toY) {
+		const mapFromX = Math.floor((fromX - this.columnOffset) / this.side);
+		const mapFromY = Math.floor((fromY - this.rowOffset) / this.side);
+		const mapToX = Math.floor((toX - this.columnOffset) / this.side);
+		const mapToY = Math.floor((toY - this.rowOffset) / this.side);
+		const fromTile = this.tiles[this.columnsNumber * mapFromY + mapFromX];
+		const toTile = this.tiles[this.columnsNumber * mapToY + mapToX];
+
+		if (!fromTile || !toTile) {
+			return null;
+		}
+
+		return this.aStar(fromTile, toTile, glMatrix.vec2.distance);
+	}
+
+	getTile(column, row) {
+		return row < 0 ||
+			row > this.rowsNumber - 1 ||
+			column < 0 ||
+			column > this.columnsNumber - 1
+			? undefined
+			: this.tiles[row * this.columnsNumber + column];
+	}
+
+	tileNeighbours(id) {
+		const row = Math.floor(id / this.columnsNumber);
+		const column = Math.floor(id % this.columnsNumber);
+
+		return [
+			this.getTile(column - 1, row - 1),
+			this.getTile(column, row - 1),
+			this.getTile(column + 1, row - 1),
+			this.getTile(column - 1, row),
+			this.getTile(column + 1, row),
+			this.getTile(column - 1, row + 1),
+			this.getTile(column, row + 1),
+			this.getTile(column + 1, row + 1),
+		];
+	}
+
+	reconstructPath(cameFrom, current) {
+		const totalPath = [[this.tiles[current].x, this.tiles[current].y]];
+
+		const keys = Object.keys(cameFrom).map((key) => parseInt(key));
+
+		while (keys.includes(current)) {
+			current = cameFrom[current];
+			totalPath.push([this.tiles[current].x, this.tiles[current].y]);
+		}
+
+		return totalPath;
+	}
+
+	aStar(from, to, dist) {
+		const queue = new Heapify(10000);
+
+		const startFscore = Math.abs(dist(from.toVec(), to.toVec()));
+		queue.push(from.id, startFscore);
+
+		const cameFrom = {};
+
+		const gScore = { [from.id]: 0 };
+		const fScore = { [from.id]: startFscore };
+
+		while (queue.size) {
+			const current = queue.pop();
+
+			if (current === to.id) {
+				return this.reconstructPath(cameFrom, current);
+			}
+
+			const neighbours = this.tileNeighbours(current);
+
+			for (let i = 0; i < neighbours.length; i++) {
+				if (
+					!neighbours[i] ||
+					(!neighbours[i].walkable && neighbours[i] !== to)
+				) {
+					continue;
+				}
+				const tentativeGscore = gScore[current] + 1;
+
+				if (
+					tentativeGscore < gScore[neighbours[i].id] ||
+					typeof gScore[neighbours[i].id] === 'undefined'
+				) {
+					cameFrom[neighbours[i].id] = current;
+					gScore[neighbours[i].id] = tentativeGscore;
+					fScore[neighbours[i].id] =
+						gScore[neighbours[i].id] +
+						Math.abs(dist(neighbours[i].toVec(), to.toVec()));
+
+					queue.push(neighbours[i].id, fScore[neighbours[i].id]);
+				}
+			}
+		}
+
+		return null;
 	}
 }

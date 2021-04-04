@@ -83,5 +83,5 @@ export function scaleByDeltaTime(value) {
 		return value;
 	}
 
-	return (value * global.deltaTime) / (1 / 144);
+	return (global.speedUpFactor * (value * global.deltaTime)) / (1 / 144);
 }

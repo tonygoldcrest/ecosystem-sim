@@ -1,30 +1,10 @@
-import { scaleByDeltaTime, scaleByResolution } from '../helpers.js';
+import { scaleByDeltaTime } from '../helpers.js';
 import names from '../names.js';
-import { getInheritableProp } from './helpers.js';
+import { getInheritableProp, mutate } from './helpers.js';
+import Movable from './movable.js';
+import { ACTIVITIES, SEX, DEATH_REASONS } from './constants.js';
 
-export const ACTIVITIES = {
-	NONE: 0,
-	FETCHING_WATER: 1,
-	DRINKING: 2,
-	FETCHING_FOOD: 3,
-	MATING: 4,
-};
-
-export const DEATH_REASONS = {
-	DRAWN: 0,
-	STARVATION: 1,
-	THIRST: 2,
-	AGE: 3,
-	OUT_OF_BOUNDS: 4,
-	ILLNESS: 5,
-};
-
-export const SEX = {
-	MALE: 0,
-	FEMALE: 1,
-};
-
-export default class Rabbit {
+export default class Rabbit extends Movable {
 	constructor(
 		x,
 		y,
@@ -34,8 +14,10 @@ export default class Rabbit {
 		inheritableProps,
 		parentTextures
 	) {
+		super();
 		this.config = {
 			inheritableProps: inheritableProps || {
+				generation: 1,
 				baseSpeed: 0.5 + Math.random(),
 				descendants: 1 + Math.floor(7 * Math.random()),
 				changeDirectionThreshold: Math.random() / 1000,
@@ -87,6 +69,7 @@ export default class Rabbit {
 				this.config.baseFoodSearchThreshold + Math.floor(20 * Math.random()),
 			matingThreshold: 50,
 			position: glMatrix.vec2.fromValues(x, y),
+			initialPosition: glMatrix.vec2.fromValues(x, y),
 		};
 
 		this.foodSources = foodSources;
@@ -101,6 +84,7 @@ export default class Rabbit {
 			return;
 		}
 
+		this.checkEnvironment();
 		this.move();
 		this.updateStats();
 		this.checkAge();
@@ -117,11 +101,15 @@ export default class Rabbit {
 			this.die(DEATH_REASONS.ILLNESS);
 		}
 
-		if (
-			!this.state.activity &&
-			Math.random() < this.config.inheritableProps.changeDirectionThreshold
-		) {
-			this.wander();
+		if (!this.state.activity && this.isWell() && Math.random() < 0.001) {
+			this.stop();
+			this.scheduleStartMovingWithRandomVelocity();
+		}
+
+		if (!this.isWell() && this.state.restartMovementTimeout) {
+			clearTimeout(this.state.restartMovementTimeout);
+			this.state.restartMovementTimeout = undefined;
+			this.startMoving();
 		}
 
 		if (
@@ -146,9 +134,6 @@ export default class Rabbit {
 		}
 
 		switch (this.state.activity) {
-			case ACTIVITIES.FETCHING_WATER:
-				this.checkDistanceToWater();
-				break;
 			case ACTIVITIES.FETCHING_FOOD:
 				this.checkDistanceToFood();
 				break;
@@ -157,79 +142,20 @@ export default class Rabbit {
 					this.checkDistanceToFemale();
 				}
 				break;
+			case ACTIVITIES.DRINKING:
+				this.drink();
+				break;
 			default:
 				break;
 		}
-
-		this.checkEnvironment();
 	}
 
-	move() {
-		const coeff = Math.max(
-			0,
-			2 *
-				Math.sin(
-					2 * Math.PI * this.config.seed + (this.state.speed * Date.now()) / 200
-				)
+	isWell() {
+		return (
+			this.state.stats.water > this.state.waterSearchThreshold &&
+			this.state.stats.food > this.state.foodSearchThreshold &&
+			this.state.stats.mate < this.state.matingThreshold
 		);
-		const movement = glMatrix.vec2.fromValues(...this.state.velocity);
-
-		glMatrix.vec2.scale(movement, movement, scaleByDeltaTime(coeff));
-		glMatrix.vec2.add(this.state.position, this.state.position, movement);
-		this.state.projectedSize = this.state.size + 5 * coeff;
-	}
-
-	startMoving() {
-		this.state.speed = this.config.inheritableProps.baseSpeed;
-		this.state.velocity = glMatrix.vec2.create();
-		glMatrix.vec2.random(this.state.velocity, 0.1 * this.state.speed);
-
-		this.updateFieldOfView();
-		this.state.activity = ACTIVITIES.NONE;
-	}
-
-	wander(angle = Math.random() * 2 * Math.PI) {
-		this.state.speed = this.config.inheritableProps.baseSpeed;
-
-		glMatrix.vec2.rotate(
-			this.state.velocity,
-			this.state.velocity,
-			[0, 0],
-			angle
-		);
-
-		glMatrix.vec2.normalize(this.state.velocity, this.state.velocity);
-		glMatrix.vec2.scale(
-			this.state.velocity,
-			this.state.velocity,
-			0.1 * this.state.speed
-		);
-
-		this.updateFieldOfView();
-		this.state.activity = ACTIVITIES.NONE;
-	}
-
-	setDirection(x, y) {
-		this.state.velocity = glMatrix.vec2.fromValues(x, y);
-		glMatrix.vec2.normalize(this.state.velocity, this.state.velocity);
-		glMatrix.vec2.scale(
-			this.state.velocity,
-			this.state.velocity,
-			0.1 * this.state.speed
-		);
-
-		this.updateFieldOfView();
-	}
-
-	stop() {
-		this.state.speed = this.config.inheritableProps.baseSpeed;
-		glMatrix.vec2.zero(this.state.velocity);
-	}
-
-	updateFieldOfView() {
-		this.state.fieldOfView = glMatrix.vec2.fromValues(...this.state.velocity);
-		glMatrix.vec2.normalize(this.state.fieldOfView, this.state.fieldOfView);
-		glMatrix.vec2.scale(this.state.fieldOfView, this.state.fieldOfView, 15);
 	}
 
 	toArray() {
@@ -243,6 +169,15 @@ export default class Rabbit {
 		];
 	}
 
+	drink() {
+		this.state.stats.water += scaleByDeltaTime(0.1);
+
+		if (this.state.stats.water > 100) {
+			this.scheduleRotateVelocityAndMove(...this.state.previousVelocity);
+			this.state.activity = ACTIVITIES.NONE;
+		}
+	}
+
 	updateStats() {
 		this.state.stats.age += scaleByDeltaTime(0.002);
 		this.state.stats.food -= scaleByDeltaTime(0.012);
@@ -254,16 +189,8 @@ export default class Rabbit {
 			this.state.stats.pregnancy += scaleByDeltaTime(0.01);
 		}
 
-		if (!this.state.isDrinking) {
+		if (this.state.activity !== ACTIVITIES.DRINKING) {
 			this.state.stats.water -= scaleByDeltaTime(0.012);
-		} else {
-			this.state.stats.water += scaleByDeltaTime(0.1);
-
-			if (this.state.stats.water > 100) {
-				this.state.isDrinking = false;
-				this.startMoving();
-				this.state.activity = ACTIVITIES.NONE;
-			}
 		}
 	}
 
@@ -293,14 +220,6 @@ export default class Rabbit {
 		);
 
 		if (this.closestWaterTile) {
-			const distanceToWater = Math.abs(
-				glMatrix.vec2.distance(this.state.position, this.closestWaterTile)
-			);
-
-			if (distanceToWater > 500) {
-				debugger;
-			}
-
 			this.state.speed = this.config.inheritableProps.baseSpeed + 1;
 			this.setDirection(
 				this.closestWaterTile[0] - this.state.position[0],
@@ -312,13 +231,15 @@ export default class Rabbit {
 	}
 
 	searchForFood() {
-		this.closestFoodSource = this.foodSources.getClosestFoodSource(
+		const source = this.foodSources.getClosestFoodSource(
 			this.state.position[0],
 			this.state.position[1],
 			this.config.inheritableProps.foodSenseRadius
 		);
 
-		if (this.closestFoodSource && !this.closestFoodSource.empty) {
+		if (source) {
+			this.closestFoodSource = source;
+
 			this.state.speed = this.config.inheritableProps.baseSpeed + 1;
 			this.setDirection(
 				this.closestFoodSource.x - this.state.position[0],
@@ -365,24 +286,7 @@ export default class Rabbit {
 		}
 	}
 
-	checkDistanceToWater() {
-		const distanceToWater = Math.abs(
-			glMatrix.vec2.distance(this.state.position, this.closestWaterTile)
-		);
-
-		if (distanceToWater < 10) {
-			this.stop();
-			this.state.isDrinking = true;
-		}
-	}
-
 	checkDistanceToFood() {
-		if (this.closestFoodSource.empty) {
-			this.wander();
-			this.closestFoodSource = undefined;
-			return;
-		}
-
 		const distance = Math.abs(
 			glMatrix.vec2.distance(this.state.position, [
 				this.closestFoodSource.x,
@@ -390,23 +294,31 @@ export default class Rabbit {
 			])
 		);
 
+		if (
+			this.closestFoodSource.empty ||
+			distance > this.config.inheritableProps.foodSenseRadius
+		) {
+			this.startWandering();
+			this.closestFoodSource = undefined;
+			return;
+		}
+
 		if (distance < 25) {
 			this.closestFoodSource.empty = true;
 			this.state.stats.food = 100;
 			this.closestFoodSource = undefined;
-			this.wander();
+			this.startWandering();
 		}
 	}
 
 	checkDistanceToFemale() {
-		if (!this.closestFemale) {
-			this.wander();
-			return;
-		}
-
-		if (this.closestFemale.state.pregnant) {
-			this.wander();
+		if (
+			!this.closestFemale ||
+			this.closestFemale.state.pregnant ||
+			!this.closestFemale.state.alive
+		) {
 			this.closestFemale = undefined;
+			this.startWandering();
 			return;
 		}
 
@@ -422,59 +334,11 @@ export default class Rabbit {
 			this.closestFemale = undefined;
 			this.state.stats.mate = 0;
 			this.state.impregnated += 1;
-			this.wander();
-		} else if (distance > 200) {
-			this.wander();
+			this.startWandering();
+		} else if (distance > this.config.inheritableProps.femaleSenseRadius) {
+			this.startWandering();
 			this.closestFemale.startMoving();
 			this.closestFemale = undefined;
-		}
-	}
-
-	checkEnvironment() {
-		const fieldOfView = glMatrix.vec2.fromValues(...this.state.position);
-		glMatrix.vec2.add(fieldOfView, this.state.position, this.state.fieldOfView);
-
-		// going for water infinite
-
-		if (
-			(fieldOfView[0] < 0 && this.state.velocity[0] < 0) ||
-			(fieldOfView[0] > this.environment.width && this.state.velocity[0] > 0)
-		) {
-			this.state.velocity[0] = -this.state.velocity[0];
-			this.state.activity = ACTIVITIES.NONE;
-			this.updateFieldOfView();
-		} else if (
-			(fieldOfView[1] < 0 && this.state.velocity[1] < 0) ||
-			(fieldOfView[1] > this.environment.height && this.state.velocity[1] > 0)
-		) {
-			this.state.velocity[1] = -this.state.velocity[1];
-			this.state.activity = ACTIVITIES.NONE;
-			this.updateFieldOfView();
-		} else if (
-			this.environment.isWater(
-				Math.floor(fieldOfView[0]),
-				Math.floor(fieldOfView[1])
-			) &&
-			this.state.activity !== ACTIVITIES.FETCHING_WATER &&
-			!this.state.isDrinking
-		) {
-			this.wander((2 * Math.PI) / 3 + Math.random() * ((2 * Math.PI) / 3));
-		}
-
-		if (
-			this.state.position[0] < 0 ||
-			this.state.position[0] > this.environment.width ||
-			this.state.position[1] < 0 ||
-			this.state.position[1] > this.environment.height
-		) {
-			this.die(DEATH_REASONS.OUT_OF_BOUNDS);
-		} else if (
-			this.environment.isWater(
-				Math.floor(this.state.position[0]),
-				Math.floor(this.state.position[1])
-			)
-		) {
-			this.die(DEATH_REASONS.DRAWN);
 		}
 	}
 
@@ -490,9 +354,11 @@ export default class Rabbit {
 
 	getGenes() {
 		return {
-			baseSpeed: getInheritableProp('baseSpeed', 'father', this),
+			baseSpeed: mutate(getInheritableProp('baseSpeed', 'average', this)),
 			maxAge: Math.floor(getInheritableProp('maxAge', 'average', this)),
-			descendants: getInheritableProp('descendants', 'mother', this),
+			descendants: Math.round(
+				mutate(getInheritableProp('descendants', 'mother', this))
+			),
 			changeDirectionThreshold: getInheritableProp(
 				'changeDirectionThreshold',
 				'average',
@@ -507,6 +373,11 @@ export default class Rabbit {
 				'father',
 				this
 			),
+			generation:
+				Math.max(
+					this.config.inheritableProps.generation,
+					this.state.fatherProps.generation
+				) + 1,
 		};
 	}
 

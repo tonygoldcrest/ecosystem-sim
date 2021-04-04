@@ -1,5 +1,6 @@
 import GLProgram from '../gl-program/index.js';
-import Rabbit, { DEATH_REASONS, SEX } from './rabbit.js';
+import Rabbit from './rabbit.js';
+import { DEATH_REASONS, SEX } from './constants.js';
 
 const MALE_TEXTURES_NUMBER = 3;
 const FEMALE_TEXTURES_NUMBER = 3;
@@ -157,52 +158,6 @@ export default class RabbitPopulation extends GLProgram {
 		});
 	}
 
-	bindTexture(image) {
-		this.gl.useProgram(this.program);
-		const texture = this.gl.createTexture();
-		const textureRegistry = this.global.nextTextureRegistry;
-
-		this.gl.activeTexture(this.gl.TEXTURE0 + textureRegistry);
-		this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_WRAP_S,
-			this.gl.CLAMP_TO_EDGE
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_WRAP_T,
-			this.gl.CLAMP_TO_EDGE
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_MIN_FILTER,
-			this.gl.NEAREST
-		);
-		this.gl.texParameteri(
-			this.gl.TEXTURE_2D,
-			this.gl.TEXTURE_MAG_FILTER,
-			this.gl.NEAREST
-		);
-
-		const mipLevel = 0;
-		const internalFormat = this.gl.RGBA;
-		const srcFormat = this.gl.RGBA;
-		const srcType = this.gl.UNSIGNED_BYTE;
-		this.gl.texImage2D(
-			this.gl.TEXTURE_2D,
-			mipLevel,
-			internalFormat,
-			srcFormat,
-			srcType,
-			image
-		);
-
-		this.global.nextTextureRegistry += 1;
-		return textureRegistry;
-	}
-
 	setupUniforms() {
 		super.setupUniforms();
 		const matrixLocation = this.gl.getUniformLocation(this.program, 'uMatrix');
@@ -212,7 +167,7 @@ export default class RabbitPopulation extends GLProgram {
 
 	generateRabbits() {
 		for (let i = 0; i < this.rabbits.length; i++) {
-			const randomTile = this.environment.getRandomGroundTile();
+			const randomTile = this.environment.getRandomGrassTile();
 			this.rabbits[i] = new Rabbit(
 				randomTile.x,
 				randomTile.y,
@@ -301,8 +256,8 @@ export default class RabbitPopulation extends GLProgram {
 			for (let i = 0; i < rabbit.config.inheritableProps.descendants; i++) {
 				this.rabbits.push(
 					new Rabbit(
-						rabbit.state.position[0] + Math.floor((2 * Math.random() - 1) * 5),
-						rabbit.state.position[1] + Math.floor((2 * Math.random() - 1) * 5),
+						rabbit.state.position[0], //+ Math.floor((2 * Math.random() - 1) * 5),
+						rabbit.state.position[1], // + Math.floor((2 * Math.random() - 1) * 5),
 						this.environment,
 						this.foodSources,
 						this,
