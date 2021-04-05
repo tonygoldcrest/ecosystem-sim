@@ -79,6 +79,7 @@ export default class FoodSources extends GLProgram {
 	getClosestFoodSource(x, y, distance) {
 		let minDistance = 1000;
 		let currentClosestSource = null;
+
 		this.foodSources.forEach((source) => {
 			const dst = Math.abs(
 				glMatrix.vec2.distance([x, y], [source.x, source.y])
@@ -88,6 +89,19 @@ export default class FoodSources extends GLProgram {
 				minDistance = dst;
 			}
 		});
+
+		if (currentClosestSource) {
+			if (
+				this.environment.hasWaterBetweenPoints(
+					x,
+					y,
+					currentClosestSource.x,
+					currentClosestSource.y
+				)
+			) {
+				return null;
+			}
+		}
 
 		return currentClosestSource;
 	}

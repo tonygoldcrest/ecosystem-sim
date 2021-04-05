@@ -23,6 +23,7 @@ class Game {
 			gl: this.gl,
 			deltaTime: 0,
 			simulationTime: 0,
+			generationType: 'island',
 			timeFromStart: 0,
 			speedUpFactor: 1,
 		};

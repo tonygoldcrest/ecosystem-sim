@@ -1,5 +1,5 @@
 import GLProgram from '../gl-program/index.js';
-import { hexToRgb } from '../helpers.js';
+import { hexToRgb, smoothstep } from '../helpers.js';
 import Tile from './tile.js';
 import Heapify from '../../libs/heapify.mjs';
 
@@ -104,44 +104,58 @@ export default class Environment extends GLProgram {
 
 		for (let i = 0; i < this.rowsNumber; i++) {
 			for (let j = 0; j < this.columnsNumber; j++) {
-				// if (
-					// (i - this.rowsNumber / 2) ** 2 + (j - this.columnsNumber / 2) ** 2 >
-					// (this.rowsNumber / 2.2) ** 2
-				// ) {
-					// this.tiles[i * this.columnsNumber + j] = new Tile(
-						// i * this.columnsNumber + j,
-						// this.side / 2 + j * this.side + this.columnOffset,
-						// this.side / 2 + i * this.side + this.rowOffset,
-						// 'water',
-						// false,
-						// Math.random() < 0.01 ? '#ffffff' : '#000000'
-					// );
-					// continue;
-				// }
-
-				const noiseValue = noise.simplex2(j / noiseScale, i / noiseScale);
 				let tileType;
-				let walkable = true;
+				if (global.generationType === 'island') {
+					const length =
+						4 *
+						Math.sqrt(
+							(i / this.rowsNumber - 0.5) ** 2 +
+								(j / this.columnsNumber - 0.5) ** 2
+						);
 
-				if (noiseValue < -0.8) {
-					tileType = 'dirt';
-				} else if (noiseValue < -0.5) {
-					tileType = 'darkGrass';
-				} else if (noiseValue < 0.2) {
-					tileType = 'grass';
-				} else if (noiseValue < 0.4) {
-					tileType = 'sand';
-				} else {
-					tileType = 'water';
-					walkable = false;
+					let noiseValue =
+						noise.simplex2(j / (3 * noiseScale), i / (3 * noiseScale)) +
+						noise.simplex2(j / (2 * noiseScale), i / (2 * noiseScale)) +
+						noise.simplex2(j / noiseScale, i / noiseScale) +
+						noise.simplex2((2 * j) / noiseScale, (2 * i) / noiseScale) +
+						noise.simplex2((3 * j) / noiseScale, (3 * i) / noiseScale);
+
+					noiseValue -= length * 3.1;
+
+					if (noiseValue < -5) {
+						tileType = 'water';
+					} else if (noiseValue < -4.5) {
+						tileType = 'sand';
+					} else if (noiseValue < -3) {
+						tileType = 'grass';
+					} else if (noiseValue < -1.0) {
+						tileType = 'darkGrass';
+					} else if (noiseValue < -0.8) {
+						tileType = 'dirt';
+					} else {
+						tileType = 'water';
+					}
+				} else if (global.generationType === 'map') {
+					const noiseValue = noise.simplex2(j / noiseScale, i / noiseScale);
+
+					if (noiseValue < -0.8) {
+						tileType = 'dirt';
+					} else if (noiseValue < -0.5) {
+						tileType = 'darkGrass';
+					} else if (noiseValue < 0.2) {
+						tileType = 'grass';
+					} else if (noiseValue < 0.4) {
+						tileType = 'sand';
+					} else {
+						tileType = 'water';
+					}
 				}
 
 				this.tiles[i * this.columnsNumber + j] = new Tile(
 					i * this.columnsNumber + j,
 					this.side / 2 + j * this.side + this.columnOffset,
 					this.side / 2 + i * this.side + this.rowOffset,
-					tileType,
-					walkable
+					tileType
 				);
 			}
 		}
@@ -188,7 +202,6 @@ export default class Environment extends GLProgram {
 		}
 
 		return this.grassTiles[Math.floor(Math.random() * this.grassTiles.length)];
-		// return this.grassTiles[5000];
 	}
 
 	getRandomGrassTileWithinRadius(x, y, radius) {
@@ -298,6 +311,34 @@ export default class Environment extends GLProgram {
 		return this.aStar(fromTile, toTile, glMatrix.vec2.distance);
 	}
 
+	hasWaterBetweenPoints(fromX, fromY, toX, toY) {
+		const fromVec = glMatrix.vec2.fromValues(fromX, fromY);
+		const toVec = glMatrix.vec2.fromValues(toX, toY);
+
+		const path = glMatrix.vec2.create();
+
+		glMatrix.vec2.subtract(path, toVec, fromVec);
+
+		const length = glMatrix.vec2.length(path);
+
+		const increment = this.side;
+
+		for (let i = 0; i < length / increment; i++) {
+			const normPath = glMatrix.vec2.create();
+			glMatrix.vec2.normalize(normPath, path);
+			glMatrix.vec2.scale(normPath, normPath, i * increment);
+			glMatrix.vec2.add(normPath, fromVec, normPath);
+			const tileX = Math.floor((normPath[0] - this.columnOffset) / this.side);
+			const tileY = Math.floor((normPath[1] - this.rowOffset) / this.side);
+
+			if (this.tiles[this.columnsNumber * tileY + tileX].type === 'water') {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	getTile(column, row) {
 		return row < 0 ||
 			row > this.rowsNumber - 1 ||
@@ -324,20 +365,20 @@ export default class Environment extends GLProgram {
 	}
 
 	reconstructPath(cameFrom, current) {
-		const totalPath = [[this.tiles[current].x, this.tiles[current].y]];
+		const totalPath = [this.tiles[current]];
 
 		const keys = Object.keys(cameFrom).map((key) => parseInt(key));
 
 		while (keys.includes(current)) {
 			current = cameFrom[current];
-			totalPath.push([this.tiles[current].x, this.tiles[current].y]);
+			totalPath.push(this.tiles[current]);
 		}
 
 		return totalPath;
 	}
 
 	aStar(from, to, dist) {
-		const queue = new Heapify(10000);
+		const queue = new Heapify(1000);
 
 		const startFscore = Math.abs(dist(from.toVec(), to.toVec()));
 		queue.push(from.id, startFscore);
@@ -357,10 +398,7 @@ export default class Environment extends GLProgram {
 			const neighbours = this.tileNeighbours(current);
 
 			for (let i = 0; i < neighbours.length; i++) {
-				if (
-					!neighbours[i] ||
-					(!neighbours[i].walkable && neighbours[i] !== to)
-				) {
+				if (!neighbours[i]) {
 					continue;
 				}
 				const tentativeGscore = gScore[current] + 1;

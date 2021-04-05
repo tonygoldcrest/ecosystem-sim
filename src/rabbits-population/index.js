@@ -200,6 +200,19 @@ export default class RabbitPopulation extends GLProgram {
 				}
 			});
 
+		if (currentClosestFemale) {
+			const hasWaterBetweenPoints = this.environment.hasWaterBetweenPoints(
+				x,
+				y,
+				currentClosestFemale.state.position[0],
+				currentClosestFemale.state.position[1]
+			);
+
+			if (hasWaterBetweenPoints) {
+				return null;
+			}
+		}
+
 		return currentClosestFemale;
 	}
 
@@ -256,8 +269,8 @@ export default class RabbitPopulation extends GLProgram {
 			for (let i = 0; i < rabbit.config.inheritableProps.descendants; i++) {
 				this.rabbits.push(
 					new Rabbit(
-						rabbit.state.position[0], //+ Math.floor((2 * Math.random() - 1) * 5),
-						rabbit.state.position[1], // + Math.floor((2 * Math.random() - 1) * 5),
+						rabbit.state.position[0],
+						rabbit.state.position[1],
 						this.environment,
 						this.foodSources,
 						this,
